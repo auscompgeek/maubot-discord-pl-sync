@@ -1,0 +1,9 @@
+---
+rooms:
+  # room id:
+  '!abc123:example.com':
+    # role name: power level
+    Exec: 50
+
+# manage only users from this bridge instance
+server_name: 'example.com'

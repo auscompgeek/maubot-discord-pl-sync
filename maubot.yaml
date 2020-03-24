@@ -1,0 +1,9 @@
+maubot: 0.1.0
+id: au.id.vovo.discord.plsync
+version: 0.1.0
+license: AGPL-3.0-or-later
+modules:
+  - discord_pl_sync
+main_class: DiscordRolePLSync
+extra_files:
+  - base-config.yaml
