@@ -83,11 +83,7 @@ class DiscordRolePLSync(Plugin):
             self.power_level_cache.pop(room_id, None)
             return
 
-        # Check this user is from our instance of the Discord bridge
-        if not (
-            mxid.startswith("@_discord_")
-            and mxid.endswith(":" + self.config["server_name"])
-        ):
+        if not self._is_discord_ghost(mxid):
             return
 
         role_pl = self._find_desired_pl(room_id, evt.content)
@@ -102,6 +98,13 @@ class DiscordRolePLSync(Plugin):
                 await self.client.send_state_event(
                     room_id, EventType.ROOM_POWER_LEVELS, pls
                 )
+
+    def _is_discord_ghost(self, mxid: UserID) -> bool:
+        """Checks if a given Matrix user is from our Discord bridge instance."""
+        return (
+            mxid.startswith("@_discord_")
+            and mxid.endswith(":" + self.config["server_name"])
+        )
 
     def _find_desired_pl(
         self, room_id: RoomID, member: MemberStateEventContent,
