@@ -93,6 +93,7 @@ class DiscordRolePLSync(Plugin):
             pls = await self.get_power_levels(room_id)
             if pls.get_user_level(mxid) == role_pl:
                 self.log.info("%s %s PL already %s", room_id, mxid, role_pl)
+                await evt.mark_read()
             else:
                 pls.set_user_level(mxid, role_pl)
                 await self.client.send_state_event(
