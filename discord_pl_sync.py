@@ -16,8 +16,8 @@
 
 from typing import Dict, List, Optional, Type, TypedDict
 
-from maubot import Plugin
-from maubot.handlers import event
+from maubot import MessageEvent, Plugin
+from maubot.handlers import command, event
 from mautrix.types import (
     EventType,
     MemberStateEventContent,
@@ -47,6 +47,7 @@ class Config(BaseProxyConfig):
     def do_update(self, helper: ConfigUpdateHelper) -> None:
         helper.copy("rooms")
         helper.copy("server_name")
+        helper.copy("allow_manual_resync")
 
 
 class DiscordRolePLSync(Plugin):
@@ -99,6 +100,38 @@ class DiscordRolePLSync(Plugin):
                 await self.client.send_state_event(
                     room_id, EventType.ROOM_POWER_LEVELS, pls
                 )
+
+    @command.new("syncdiscordroles")
+    @command.argument("room_id")
+    async def sync_roles(self, evt: MessageEvent, room_id: RoomID) -> None:
+        if not self.config["allow_manual_resync"]:
+            evt.respond("Manual Discord role resync is disabled.")
+            return
+
+        if room_id not in self.config["rooms"]:
+            evt.respond("That room is not in my config.")
+            return
+
+        power_levels = await self.get_power_levels(room_id)
+        members = await self.client.get_members(room_id)
+        pls_changed = False
+
+        for member in members:
+            mxid = UserID(member.state_key)
+            if not self._is_discord_ghost(mxid):
+                continue
+
+            role_pl = self._find_desired_pl(room_id, member.content)
+            if role_pl is not None:
+                power_levels.set_user_level(mxid, role_pl)
+                pls_changed = True
+
+        if pls_changed:
+            await self.client.send_state_event(
+                room_id, EventType.ROOM_POWER_LEVELS, power_levels
+            )
+
+        await evt.mark_read()
 
     def _is_discord_ghost(self, mxid: UserID) -> bool:
         """Checks if a given Matrix user is from our Discord bridge instance."""
