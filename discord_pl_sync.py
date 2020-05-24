@@ -46,7 +46,6 @@ class DiscordMember(TypedDict):
 class Config(BaseProxyConfig):
     def do_update(self, helper: ConfigUpdateHelper) -> None:
         helper.copy("rooms")
-        helper.copy("mxid_prefix")
         helper.copy("server_name")
 
 
